@@ -1,0 +1,410 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Surprise For You</title>
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body {
+    font-family:'Segoe UI',sans-serif;
+    background:#f0f0f5;
+    min-height:100vh;
+    overflow-x:hidden;
+    position:relative;
+  }
+
+  /* CONFETTI */
+  .confetti-bg {
+    position:fixed; top:0; left:0;
+    width:100%; height:100%;
+    pointer-events:none; z-index:0; overflow:hidden;
+  }
+  .cp {
+    position:absolute;
+    animation:floatDown linear infinite;
+  }
+  @keyframes floatDown {
+    0%   { transform:translateY(-40px) rotate(0deg); opacity:1; }
+    100% { transform:translateY(110vh) rotate(720deg); opacity:0.3; }
+  }
+
+  /* FLOATING ELEMENTS */
+  .fe {
+    position:fixed; pointer-events:none; z-index:0;
+    animation:feFloat ease-in-out infinite;
+  }
+  @keyframes feFloat {
+    0%,100% { transform:translateY(0) rotate(-5deg); }
+    50%      { transform:translateY(-18px) rotate(5deg); }
+  }
+
+  /* SCREENS */
+  .screen {
+    display:none; position:relative; z-index:1;
+    min-height:100vh;
+    align-items:center; justify-content:center;
+    flex-direction:column; padding:20px;
+  }
+  .screen.active { display:flex; }
+
+  /* CARD */
+  .card {
+    background:white; border-radius:28px;
+    padding:36px 28px;
+    box-shadow:0 8px 40px rgba(0,0,0,0.10);
+    text-align:center; width:100%; max-width:380px;
+    position:relative; z-index:2;
+  }
+
+  /* BUTTON */
+  .btn {
+    display:block; background:#6d28d9; color:white; border:none;
+    border-radius:50px; padding:16px 40px; font-size:1.1rem;
+    font-weight:600; cursor:pointer; margin-top:20px; width:100%;
+    box-shadow:0 4px 20px rgba(109,40,217,0.4);
+    transition:all 0.3s ease;
+  }
+  .btn:active { transform:scale(0.97); }
+  
+  /* Button Hidden State */
+  .btn-hidden {
+    opacity: 0;
+    transform: translateY(20px);
+    pointer-events: none;
+  }
+  .btn-show {
+    opacity: 1;
+    transform: translateY(0);
+    pointer-events: auto;
+  }
+
+  /* SCREEN 1 */
+  #s1 h1 { font-size:2.2rem; font-weight:800; color:#7c3aed; margin-bottom:14px; }
+  #s1 p  { font-size:1rem; color:#555; line-height:1.8; margin-bottom:4px; }
+
+  /* SCREEN 2 */
+  #s2 h2  { font-size:1.55rem; font-weight:800; color:#7c3aed; margin-bottom:6px; line-height:1.3; }
+  #s2 .sub  { font-size:0.95rem; color:#555; margin-bottom:6px; }
+  #s2 .moves{ font-size:1rem; font-weight:700; color:#6d28d9; margin-bottom:14px; }
+  .grid {
+    display:grid; grid-template-columns:repeat(4,1fr); gap:9px;
+  }
+  .gi {
+    aspect-ratio:1; border-radius:13px; cursor:pointer;
+    position:relative; transform-style:preserve-3d;
+    transition:transform 0.4s;
+  }
+  .gi.flipped { transform:rotateY(180deg); }
+  .gi.matched { transform:rotateY(180deg); }
+  .gi.matched .gb { background:#22c55e !important; border:2px solid #16a34a; }
+  .gf,.gb {
+    position:absolute; width:100%; height:100%; border-radius:13px;
+    display:flex; align-items:center; justify-content:center;
+    backface-visibility:hidden; font-size:1.65rem;
+  }
+  .gf { background:#7c3aed; font-size:1.3rem; color:white; }
+  .gb { background:#7c3aed; transform:rotateY(180deg); }
+
+  /* SCREEN 3 */
+  #s3 h2        { font-size:1.8rem; font-weight:800; color:#7c3aed; margin-bottom:14px; }
+  #s3 .candle   { font-size:3rem; margin:8px 0; }
+  #s3 .flame    { display:inline-block; animation:flicker 0.5s ease-in-out infinite alternate; }
+  @keyframes flicker {
+    0%   { transform:scale(1) rotate(-3deg); }
+    100% { transform:scale(1.12) rotate(3deg); filter:brightness(1.3); }
+  }
+  #s3 .cake     { font-size:5rem; margin:6px 0; }
+  #s3 .wish-txt { font-size:0.98rem; color:#555; margin:14px 0 8px; line-height:1.7; }
+
+  /* SCREEN 4 */
+  #s4 {
+    background:white; padding:0;
+    align-items:flex-start; justify-content:flex-start;
+    overflow-y:auto;
+  }
+  #s4 .bunny { font-size:7rem; text-align:center; width:100%; padding-top:20px; z-index:2; position:relative; }
+  #s4 .wcard {
+    background:white; border-radius:28px;
+    padding:28px 24px;
+    box-shadow:0 8px 40px rgba(0,0,0,0.08);
+    width:calc(100% - 32px); max-width:380px;
+    margin:0 16px 30px; z-index:2; position:relative;
+  }
+  #s4 .wcard h3 { font-size:1.4rem; font-weight:800; color:#6d28d9; text-align:center; margin-bottom:16px; }
+  #s4 .wcard p  { font-size:1rem; color:#333; line-height:1.85; white-space: pre-wrap; }
+  .twc::after { content:'|'; animation:blink 0.7s infinite; }
+  @keyframes blink { 0%,100%{opacity:1;}50%{opacity:0;} }
+
+  /* SCREEN 5 */
+  #s5 {
+    background:white; padding:30px 20px;
+    align-items:center; justify-content:flex-start;
+    overflow-y:auto;
+  }
+  #s5 h1  { font-size:2.4rem; font-weight:900; color:#e91e8c; font-style:italic; margin-bottom:6px; z-index:2; position:relative; }
+  #s5 .bow{ font-size:2rem; margin-bottom:14px; z-index:2; position:relative; }
+  #s5 .hbt{ font-size:0.95rem; color:#333; text-align:center; margin-bottom:20px; line-height:1.65; max-width:360px; z-index:2; position:relative; }
+
+  .pgrid {
+    width:100%; max-width:360px;
+    display:flex; flex-direction:column; gap:10px;
+    background:#111; border-radius:20px; padding:10px;
+    z-index:2; position:relative;
+  }
+
+  .pslot {
+    width:100%; border-radius:14px;
+    background:#1a1a1a; overflow:hidden;
+    position:relative;
+  }
+  .pslot img {
+    width:100%; height:auto; display:block;
+    border-radius:14px;
+    object-fit:contain;
+    background:#111;
+  }
+
+  /* BG layers for s4/s5 */
+  .sbg {
+    position:fixed; top:0; left:0; width:100%; height:100%;
+    pointer-events:none; z-index:0; overflow:hidden;
+  }
+
+  /* ===== CUSTOM ALERT MODAL ===== */
+  #alertOverlay {
+    display:none; position:fixed; inset:0;
+    background:rgba(0,0,0,0.45); z-index:9999;
+    align-items:center; justify-content:center;
+    padding:20px;
+  }
+  #alertOverlay.show { display:flex; }
+  #alertBox {
+    background:white; border-radius:20px;
+    padding:28px 24px; max-width:300px; width:100%;
+    text-align:center;
+    box-shadow:0 12px 60px rgba(0,0,0,0.25);
+    animation:popIn 0.3s cubic-bezier(0.34,1.56,0.64,1);
+  }
+  @keyframes popIn {
+    0%   { transform:scale(0.7); opacity:0; }
+    100% { transform:scale(1); opacity:1; }
+  }
+  #alertBox .alert-icon { font-size:2.8rem; margin-bottom:10px; }
+  #alertBox .alert-msg  { font-size:1rem; color:#333; line-height:1.6; margin-bottom:20px; font-weight:500; }
+  #alertBox .alert-ok {
+    background:#6d28d9; color:white; border:none;
+    border-radius:50px; padding:13px 40px;
+    font-size:1rem; font-weight:700; cursor:pointer;
+    width:100%; box-shadow:0 4px 16px rgba(109,40,217,0.35);
+  }
+</style>
+</head>
+<body>
+
+<div class="confetti-bg" id="confettiBg"></div>
+<div class="fe" style="left:5%;top:28%;font-size:48px;animation-duration:8s">🎈</div>
+<div class="fe" style="right:8%;top:32%;font-size:38px;animation-duration:6s;animation-delay:1s">💗</div>
+<div class="fe" style="left:10%;top:58%;font-size:28px;animation-duration:7s;animation-delay:2s">🎀</div>
+<div class="fe" style="right:6%;top:65%;font-size:24px;animation-duration:5.5s;animation-delay:0.5s">💜</div>
+
+<div id="alertOverlay">
+  <div id="alertBox">
+    <div class="alert-icon">🎉</div>
+    <div class="alert-msg" id="alertMsg">Yay! Game selesai! Lanjut ke surprise!</div>
+    <button class="alert-ok" id="alertOkBtn">OK</button>
+  </div>
+</div>
+
+<div class="screen active" id="s1">
+  <div class="card">
+    <h1>Hai Amelia</h1>
+    <p>I made this just for you!</p>
+    <p>Main game bentar yuk buat buka suprise-nya</p>
+    <button class="btn" onclick="goTo(2)">Mulai Game →</button>
+  </div>
+</div>
+
+<div class="screen" id="s2">
+  <div class="card">
+    <h2>Main game dulu yaa<br>sebelum surprisenya</h2>
+    <div class="sub">🌟 Klik 2 kartu yang sama!</div>
+    <div class="moves">Moves: <span id="movesCount">0</span></div>
+    <div class="grid" id="gameGrid"></div>
+  </div>
+</div>
+
+<div class="screen" id="s3">
+  <div class="card">
+    <h2>Make a Wish! 🎉</h2>
+    <div class="candle"><span class="flame" id="flameEl">🕯️</span></div>
+    <div class="cake">🎂</div>
+    <p class="wish-txt">Tutup matamu, buat permintaan,<br>lalu tiup lilinnya! 😊</p>
+    <button class="btn" id="blowBtn" onclick="blowCandle()">💨 Tiup Lilin!</button>
+  </div>
+</div>
+
+<div class="screen" id="s4">
+  <div class="sbg" id="s4Bg"></div>
+  <div class="bunny">🐰</div>
+  <div class="wcard">
+    <h3>a wish for u on ur birthday</h3>
+    <p id="twEl" class="twc"></p>
+    <button id="nextSurpriseBtn" class="btn btn-hidden" onclick="goTo(5)">Lihat Surprise Selanjutnya →</button>
+  </div>
+</div>
+
+<div class="screen" id="s5">
+  <div class="sbg" id="s5Bg"></div>
+  <h1>happy birthday!</h1>
+  <div class="bow">🎀</div>
+  <p class="hbt">hi, pretty gurl! Wishing you a life filled with love, joy, and cherish the moments that make you happy! 💕</p>
+
+  <div class="pgrid">
+    <div class="pslot">
+      <img src="image/1.jpg" alt="Memory 1">
+    </div>
+    <div class="pslot">
+      <img src="image/2.jpg" alt="Memory 2">
+    </div>
+  </div>
+  <br><br>
+</div>
+
+<script>
+const COLORS=['#f472b6','#a78bfa','#34d399','#fbbf24','#60a5fa','#e879f9','#f87171','#38bdf8','#fb923c'];
+function makeConfetti(el,n=30){
+  el.innerHTML='';
+  for(let i=0;i<n;i++){
+    const d=document.createElement('div');
+    d.className='cp';
+    const c=COLORS[~~(Math.random()*COLORS.length)];
+    const s=7+Math.random()*9;
+    d.style.cssText=`background:${c};width:${s}px;height:${Math.random()>.5?s:s*.4}px;left:${Math.random()*100}%;top:${-20-Math.random()*60}px;animation-duration:${4+Math.random()*6}s;animation-delay:${Math.random()*5}s;border-radius:${Math.random()>.5?'50%':'2px'};`;
+    el.appendChild(d);
+  }
+}
+makeConfetti(document.getElementById('confettiBg'), 35);
+
+function showAlert(msg, onOk){
+  document.getElementById('alertMsg').textContent = msg;
+  document.getElementById('alertOverlay').classList.add('show');
+  document.getElementById('alertOkBtn').onclick = ()=>{
+    document.getElementById('alertOverlay').classList.remove('show');
+    if(onOk) onOk();
+  };
+}
+
+function goTo(n){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.getElementById('s'+n).classList.add('active');
+  window.scrollTo(0,0);
+  if(n===2) initGame();
+  if(n===3) resetCandle();
+  if(n===4) startS4();
+  if(n===5) startS5();
+}
+
+const EMOJIS=['🎁','🎈','💝','🎉','⭐','🎂'];
+let flipped=[],matched=0,moves=0,lock=false;
+function shuffle(a){for(let i=a.length-1;i>0;i--){const j=~~(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
+
+function initGame(){
+  flipped=[];matched=0;moves=0;lock=false;
+  document.getElementById('movesCount').textContent=0;
+  const deck=shuffle([...EMOJIS,...EMOJIS]);
+  const grid=document.getElementById('gameGrid');
+  grid.innerHTML='';
+  deck.forEach(e=>{
+    const el=document.createElement('div');
+    el.className='gi'; el.dataset.e=e;
+    el.innerHTML=`<div class="gf">❓</div><div class="gb">${e}</div>`;
+    el.addEventListener('click',()=>flip(el));
+    grid.appendChild(el);
+  });
+}
+
+function flip(el){
+  if(lock||el.classList.contains('flipped')||el.classList.contains('matched'))return;
+  el.classList.add('flipped'); flipped.push(el);
+  if(flipped.length===2){
+    moves++; document.getElementById('movesCount').textContent=moves; lock=true;
+    const[a,b]=flipped;
+    if(a.dataset.e===b.dataset.e){
+      setTimeout(()=>{
+        a.classList.add('matched'); b.classList.add('matched');
+        matched++; flipped=[]; lock=false;
+        if(matched===EMOJIS.length){
+          setTimeout(()=>{
+            showAlert('🎉 Yay! Game selesai! Lanjut ke surprise!', ()=>goTo(3));
+          },300);
+        }
+      },300);
+    } else {
+      setTimeout(()=>{
+        a.classList.remove('flipped'); b.classList.remove('flipped');
+        flipped=[]; lock=false;
+      },900);
+    }
+  }
+}
+
+function resetCandle(){
+  const f=document.getElementById('flameEl');
+  f.textContent='🕯️'; f.style.animation=''; f.style.filter='';
+  const btn=document.getElementById('blowBtn');
+  btn.disabled=false; btn.textContent='💨 Tiup Lilin!';
+}
+function blowCandle(){
+  const f=document.getElementById('flameEl');
+  f.style.animation='none'; f.style.filter='grayscale(1) opacity(0.3)';
+  const btn=document.getElementById('blowBtn');
+  btn.disabled=true; btn.textContent='🌟 Wish made!';
+  setTimeout(()=>goTo(4),1600);
+}
+
+const wishMsg=`Selamat ulang tahun, sayangkuu Amelia Putri🫶
+
+Di hari spesialmu ini, aku cuma ingin kamu tahu kalau kamu itu sangat berarti—bukan cuma hari ini, tapi setiap hari. Terima kasih sudah bertahan sejauh ini, meskipun mungkin ada banyak hal yang nggak mudah kamu lewati.
+
+Kalau akhir-akhir ini terasa berat, nggak apa-apa… kamu nggak harus selalu terlihat kuat. Istirahatlah kalau lelah, menangislah kalau perlu. Tapi jangan pernah benar-benar menyerah, ya. Karena sejauh apa pun kamu merasa tersesat, kamu tetap punya jalan untuk kembali dan melanjutkan.
+
+Percayalah, semua yang kamu perjuangkan pelan-pelan akan menemukan jalannya. Mungkin nggak hari ini, tapi suatu saat nanti. Kamu nggak gagal—kamu hanya sedang berproses.
+
+Aku harap di usia yang baru ini, kamu bisa lebih lembut sama dirimu sendiri, lebih sabar menjalani hari, dan tetap punya harapan, sekecil apa pun itu.
+
+Aku selalu ada buat kamu, dalam diam maupun dalam doa.
+Selamat ulang tahun… semoga hatimu selalu dikuatkan. 🤍`;
+
+function startS4(){
+  makeConfetti(document.getElementById('s4Bg'), 45);
+  const el = document.getElementById('twEl');
+  const btn = document.getElementById('nextSurpriseBtn');
+  
+  el.textContent = ''; 
+  el.classList.add('twc');
+  btn.classList.remove('btn-show'); // Sembunyikan tombol jika restart
+  btn.classList.add('btn-hidden');
+
+  let i = 0;
+  const iv = setInterval(() => {
+    if(i < wishMsg.length){ 
+      el.textContent += wishMsg[i++]; 
+      // Auto scroll ke bawah saat ngetik biar teks panjang kebaca
+      const screen4 = document.getElementById('s4');
+      screen4.scrollTop = screen4.scrollHeight;
+    }
+    else { 
+      el.classList.remove('twc'); 
+      clearInterval(iv); 
+      // Tampilkan tombol setelah teks selesai
+      btn.classList.remove('btn-hidden');
+      btn.classList.add('btn-show');
+    }
+  }, 40); // Sedikit diperlambat biar lebih enak dibaca (40ms)
+}
+
+function startS5(){ makeConfetti(document.getElementById('s5Bg'), 55); }
+</script>
+</body>
+</html>
